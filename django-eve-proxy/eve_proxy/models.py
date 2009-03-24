@@ -25,7 +25,7 @@ class CachedDocumentManager(models.Manager):
         # Retrieve the response from the server.
         response = conn.getresponse()
         # Save the response (an XML document) to the CachedDocument.
-        cached_doc.body = response.read()
+        cached_doc.body = unicode(response.read(), 'utf-8').encode('utf-8')
     
         # Parse the response via minidom
         dom = minidom.parseString(cached_doc.body)

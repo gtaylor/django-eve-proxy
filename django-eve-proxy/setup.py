@@ -55,11 +55,11 @@ setup(
     version = version,
     description = "A Django-based EVE API proxy.",
     long_description = """django-eve-proxy transparently handles requests to
-    the EVE API from Python code or via HTTP. This allows developers to
-    provide a restricted or global EVE API HTTP proxy, or access the EVE API
-    via the CachedDocument python object.
-    See the project page for more information:
-  http://code.google.com/p/django-eve-proxy/""",
+the EVE API from Python code or via HTTP. This allows developers to
+provide a restricted or global EVE API HTTP proxy, or access the EVE API
+via the CachedDocument python object.
+See the project page for more information:
+http://code.google.com/p/django-eve-proxy/""",
     author = 'Gregory Taylor',
     author_email = 'gtaylor@l11solutions.com',
     url = 'http://code.google.com/p/django-eve-proxy/',
