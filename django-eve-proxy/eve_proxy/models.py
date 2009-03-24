@@ -25,7 +25,7 @@ class CachedDocumentManager(models.Manager):
         # Retrieve the response from the server.
         response = conn.getresponse()
         # Save the response (an XML document) to the CachedDocument.
-        cached_doc.body = unicode(response.read(), 'utf-8').encode('utf-8')
+        cached_doc.body = response.read()
     
         # Parse the response via minidom
         dom = minidom.parseString(cached_doc.body)
@@ -33,7 +33,7 @@ class CachedDocumentManager(models.Manager):
         # on the values in the XML response. This will be used in future
         # requests to see if the CachedDocument can be retrieved directly or
         # if it needs to be re-cached.
-        cached_doc.time_retrieved = dom.getElementsByTagName('currentTime')[0].childNodes[0].nodeValue
+        cached_doc.time_retrieved = datetime.utcnow()
         cached_doc.cached_until = dom.getElementsByTagName('cachedUntil')[0].childNodes[0].nodeValue
     
         # Finish up and return the resulting document just in case.
