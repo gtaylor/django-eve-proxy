@@ -40,7 +40,7 @@ class CachedDocumentManager(models.Manager):
         cached_doc.save()
         return cached_doc
     
-    def api_query(self, url_path, params):
+    def api_query(self, url_path, params=None):
         """
         Transparently handles querying EVE API or retrieving the document from
         the cache.
