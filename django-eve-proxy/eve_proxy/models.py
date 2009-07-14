@@ -1,5 +1,6 @@
 import httplib
 import urllib
+import xml
 from datetime import datetime, timedelta
 from xml.dom import minidom
 from django.db import models
@@ -27,8 +28,14 @@ class CachedDocumentManager(models.Manager):
         # Save the response (an XML document) to the CachedDocument.
         cached_doc.body = response.read()
     
-        # Parse the response via minidom
-        dom = minidom.parseString(cached_doc.body)
+        try:
+            # Parse the response via minidom
+            dom = minidom.parseString(cached_doc.body)
+        except xml.parsers.expat.ExpatError:
+            print "XML Parser Error:"
+            print cached_doc.body
+            return
+
         # Set the CachedDocument's time_retrieved and cached_until times based
         # on the values in the XML response. This will be used in future
         # requests to see if the CachedDocument can be retrieved directly or
