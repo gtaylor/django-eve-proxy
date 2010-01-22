@@ -4,6 +4,7 @@ import xml
 from datetime import datetime, timedelta
 from xml.dom import minidom
 from django.db import models
+from eve_api.api_exceptions import APIAuthException, APINoUserIDException
 
 # You generally never want to change this unless you have a very good reason.
 API_URL = 'api.eve-online.com'
@@ -47,7 +48,7 @@ class CachedDocumentManager(models.Manager):
         if no_cache == False:
             cached_doc.save()
 
-        return cached_doc
+        return dom
     
     def api_query(self, url_path, params=None, no_cache=False):
         """
@@ -91,8 +92,24 @@ class CachedDocumentManager(models.Manager):
           cached_doc.cached_until == None or \
           current_eve_time > cached_doc.cached_until:
             # Cache from EVE API
-            self.cache_from_eve_api(cached_doc, url_path, params, 
+            dom = self.cache_from_eve_api(cached_doc, url_path, params, 
                                     no_cache=no_cache)
+        else:
+            # Parse the document here since it was retrieved from the
+            # database cache instead of queried for.
+            dom = minidom.parseString(cached_doc.body)
+        
+        # Check for the presence errors. Only check the bare minimum,
+        # generic stuff that applies to most or all queries. User-level code
+        # should check for the more specific errors.
+        error_node = dom.getElementsByTagName('error')
+        if error_node:
+            error_code = error_node[0].getAttribute('code')
+            # User specified an invalid userid and/or auth key.
+            if error_code == '203':
+                raise APIAuthException()
+            elif error_code == '106':
+                raise APINoUserIDException()
             
         return cached_doc
 
