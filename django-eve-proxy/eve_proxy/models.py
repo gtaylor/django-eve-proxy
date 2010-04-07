@@ -4,10 +4,12 @@ import xml
 from datetime import datetime, timedelta
 from xml.dom import minidom
 from django.db import models
+from django.conf import settings
 from eve_api.api_exceptions import APIAuthException, APINoUserIDException
 
-# You generally never want to change this unless you have a very good reason.
-API_URL = 'api.eve-online.com'
+# To change this, create a variable in your local_settings.py called
+# EVE_API_URL, which will be grabbed from here.
+API_URL = getattr(settings, 'EVE_API_URL', 'api.eve-online.com')
 
 class CachedDocumentManager(models.Manager):
     """
