@@ -5,22 +5,11 @@ from datetime import datetime, timedelta
 from xml.dom import minidom
 from django.db import models
 from django.conf import settings
-from eve_api.api_exceptions import APIAuthException, APINoUserIDException
+from eve_proxy.proxy_exceptions import APIAuthException, APINoUserIDException, InvalidAPIResponseException
 
 # To change this, create a variable in your local_settings.py called
 # EVE_API_URL, which will be grabbed from here.
 API_URL = getattr(settings, 'EVE_API_URL', 'api.eve-online.com')
-
-class InvalidAPIResponseException(Exception):
-    """
-    Raised when an unrecognizable response is received from the API. This
-    usually shows up when you're using a proxy that is bugging out.
-    """
-    def __init__(self, body):
-        self.body = body
-        
-    def __str__(self):
-        return "An invalid API response was received:\r\n%s" % self.body
 
 class CachedDocumentManager(models.Manager):
     """
@@ -46,9 +35,7 @@ class CachedDocumentManager(models.Manager):
             # Parse the response via minidom
             dom = minidom.parseString(cached_doc.body)
         except xml.parsers.expat.ExpatError:
-            print "XML Parser Error:"
-            print cached_doc.body
-            return
+            raise InvalidAPIResponseException(cached_doc.body)
 
         # Set the CachedDocument's time_retrieved and cached_until times based
         # on the values in the XML response. This will be used in future
@@ -116,6 +103,11 @@ class CachedDocumentManager(models.Manager):
             # Parse the document here since it was retrieved from the
             # database cache instead of queried for.
             dom = minidom.parseString(cached_doc.body)
+        
+        if not dom:
+            # When we see failure here, we can safely assume that the response
+            # is malformed, since all API responses have a cachedUntil tag.
+            raise InvalidAPIResponseException(cached_doc.body)
         
         # Check for the presence errors. Only check the bare minimum,
         # generic stuff that applies to most or all queries. User-level code
