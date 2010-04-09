@@ -11,6 +11,17 @@ from eve_api.api_exceptions import APIAuthException, APINoUserIDException
 # EVE_API_URL, which will be grabbed from here.
 API_URL = getattr(settings, 'EVE_API_URL', 'api.eve-online.com')
 
+class InvalidAPIResponseException(Exception):
+    """
+    Raised when an unrecognizable response is received from the API. This
+    usually shows up when you're using a proxy that is bugging out.
+    """
+    def __init__(self, body):
+        self.body = body
+        
+    def __str__(self):
+        return "An invalid API response was received:\r\n%s" % self.body
+
 class CachedDocumentManager(models.Manager):
     """
     This manager handles querying or retrieving CachedDocuments.
@@ -44,7 +55,12 @@ class CachedDocumentManager(models.Manager):
         # requests to see if the CachedDocument can be retrieved directly or
         # if it needs to be re-cached.
         cached_doc.time_retrieved = datetime.utcnow()
-        cached_doc.cached_until = dom.getElementsByTagName('cachedUntil')[0].childNodes[0].nodeValue
+        try:
+            cached_doc.cached_until = dom.getElementsByTagName('cachedUntil')[0].childNodes[0].nodeValue
+        except IndexError:
+            # When we see failure here, we can safely assume that the response
+            # is malformed, since all API responses have a cachedUntil tag.
+            raise InvalidAPIResponseException(cached_doc.body)
     
         # Finish up and return the resulting document just in case.
         if no_cache == False:
