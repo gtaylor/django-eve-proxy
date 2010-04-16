@@ -1,8 +1,8 @@
 import httplib
 import urllib
-import xml
 from datetime import datetime, timedelta
-from xml.dom import minidom
+from xml.parsers.expat import ExpatError
+from xml.etree import ElementTree
 from django.db import models
 from django.conf import settings
 from eve_proxy.proxy_exceptions import APIAuthException, APINoUserIDException, InvalidAPIResponseException
@@ -33,8 +33,8 @@ class CachedDocumentManager(models.Manager):
     
         try:
             # Parse the response via minidom
-            dom = minidom.parseString(cached_doc.body)
-        except xml.parsers.expat.ExpatError:
+            tree = ElementTree.fromstring(cached_doc.body)
+        except ExpatError:
             raise InvalidAPIResponseException(cached_doc.body)
 
         # Set the CachedDocument's time_retrieved and cached_until times based
@@ -43,7 +43,7 @@ class CachedDocumentManager(models.Manager):
         # if it needs to be re-cached.
         cached_doc.time_retrieved = datetime.utcnow()
         try:
-            cached_doc.cached_until = dom.getElementsByTagName('cachedUntil')[0].childNodes[0].nodeValue
+            cached_doc.cached_until = tree.find('cachedUntil').text
         except IndexError:
             # When we see failure here, we can safely assume that the response
             # is malformed, since all API responses have a cachedUntil tag.
@@ -53,7 +53,7 @@ class CachedDocumentManager(models.Manager):
         if no_cache == False:
             cached_doc.save()
 
-        return dom
+        return tree
     
     def api_query(self, url_path, params=None, no_cache=False):
         """
@@ -97,14 +97,14 @@ class CachedDocumentManager(models.Manager):
           cached_doc.cached_until == None or \
           current_eve_time > cached_doc.cached_until:
             # Cache from EVE API
-            dom = self.cache_from_eve_api(cached_doc, url_path, params, 
+            tree = self.cache_from_eve_api(cached_doc, url_path, params, 
                                     no_cache=no_cache)
         else:
             # Parse the document here since it was retrieved from the
             # database cache instead of queried for.
-            dom = minidom.parseString(cached_doc.body)
+            tree = ElementTree.fromstring(cached_doc.body)
         
-        if not dom:
+        if not tree:
             # When we see failure here, we can safely assume that the response
             # is malformed, since all API responses have a cachedUntil tag.
             raise InvalidAPIResponseException(cached_doc.body)
@@ -112,9 +112,9 @@ class CachedDocumentManager(models.Manager):
         # Check for the presence errors. Only check the bare minimum,
         # generic stuff that applies to most or all queries. User-level code
         # should check for the more specific errors.
-        error_node = dom.getElementsByTagName('error')
-        if error_node:
-            error_code = error_node[0].getAttribute('code')
+        error_node = tree.find('error')
+        if error_node != None:
+            error_code = error_node.get('code')
             # User specified an invalid userid and/or auth key.
             if error_code == '203':
                 raise APIAuthException()
