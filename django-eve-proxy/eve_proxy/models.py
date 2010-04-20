@@ -5,7 +5,8 @@ from xml.parsers.expat import ExpatError
 from xml.etree import ElementTree
 from django.db import models
 from django.conf import settings
-from eve_proxy.proxy_exceptions import APIAuthException, APINoUserIDException, InvalidAPIResponseException
+from eve_proxy.proxy_exceptions import InvalidAPIResponseException
+from eve_proxy.api_error_exceptions import APIQueryErrorException
 
 # To change this, create a variable in your local_settings.py called
 # EVE_API_URL, which will be grabbed from here.
@@ -68,13 +69,16 @@ class CachedDocumentManager(models.Manager):
                                     the query: userID=1&characterID=xxxxxxxx
         """
         if type({}) == type(params):
-            # If 'params' is a dictionary, convert it to a URL string.
-            params = urllib.urlencode(params)
+            # If 'params' is a dictionary, we're good to go.
+            pass
         elif params == None or params.strip() == '':
             # For whatever reason, EVE API freaks out if there are no parameters.
             # Add a bogus parameter if none are specified. I'm sure there's a
             # better fix for this.
-            params = 'odd_parm=1'
+            params = {'odd_parm': '1'}
+        
+        # Convert params to a URL encoded string.    
+        params = urllib.urlencode(params)
         
         # Combine the URL path and the parameters to create the full query.
         query_name = '%s?%s' % (url_path, params)
@@ -114,14 +118,18 @@ class CachedDocumentManager(models.Manager):
         # should check for the more specific errors.
         error_node = tree.find('error')
         if error_node != None:
-            error_code = error_node.get('code')
-            # User specified an invalid userid and/or auth key.
-            if error_code == '203':
-                raise APIAuthException()
-            elif error_code == '106':
-                raise APINoUserIDException()
+            error_code = int(error_node.get('code'))
+            error_message = error_node.text
+            raise APIQueryErrorException(error_code, error_message)
             
         return cached_doc
+    
+    def clean_expired_entries(self):
+        """
+        Cleanses the cache of any expired CachedDocument objects. This can
+        be called periodically if the user is concerned about DB bloat.
+        """
+        CachedDocument.objects.filter(cached_until__lte=datetime.now).delete()
 
 class CachedDocument(models.Model):
     """
