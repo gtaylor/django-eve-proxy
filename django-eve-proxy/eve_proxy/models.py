@@ -49,6 +49,15 @@ class CachedDocumentManager(models.Manager):
             # When we see failure here, we can safely assume that the response
             # is malformed, since all API responses have a cachedUntil tag.
             raise InvalidAPIResponseException(cached_doc.body)
+        
+        if "WalletJournal.xml.aspx" in url_path:
+            # There's a bug in the cachedUntil attribute on WalletJournal
+            # queries that incorrectly reports the wrong cache value. It says
+            # 15 minutes, but should be an hour, so add the difference,
+            # which is 45 minutes (to make it an hour).
+            # Keep an eye on a fix from CCP, this will need to be removed
+            # if and when they get around to it.
+            cached_doc.cached_until += timedelta(minutes=45)
     
         # Finish up and return the resulting document just in case.
         if no_cache == False:
