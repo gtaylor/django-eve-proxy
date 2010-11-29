@@ -62,8 +62,8 @@ Example Project
 ---------------
 
 If you'd like to see an example Django project using django-eve-proxy, 
-download  eve_proxy_site from the sidebar or _Downloads_ section and follow 
-the directions in the INSTALL file.
+download  eve_proxy_site.zip file via the **Downloads** button on our github
+page.
 
 -----------
 Development
