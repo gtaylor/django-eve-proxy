@@ -18,7 +18,7 @@ CLASSIFIERS = [
 KEYWORDS = 'EVE Online CCP Django proxy'
 
 setup(name='django-eve-proxy',
-      version=version,
+      version=VERSION,
       description="A Django-based EVE API proxy.",
       long_description=LONG_DESCRIPTION,
       author='Gregory Taylor',
@@ -27,18 +27,11 @@ setup(name='django-eve-proxy',
       license='GPL',
       platforms=['any'],
       packages=[
-          'eve_api',
-          'eve_api.api_puller', 'eve_api.api_puller.account',
-          'eve_api.api_puller.character', 'eve_api.api_puller.corporation',
-          'eve_api.api_puller.eve', 'eve_api.api_puller.map',
-          'eve_api.api_puller.server',
-          'eve_api.management', 'eve_api.management.commands',
-          'eve_api.migrations',
-          'eve_api.models',
-          'eve_api.tests',
+          'eve_proxy',
+          'eve_proxy.migrations'
       ],
       requires=['django'],
-      provides=['django-eve-proxy'],
+      provides=['eve_proxy'],
       classifiers=CLASSIFIERS,
       keywords=KEYWORDS,
 )
