@@ -1,69 +1,31 @@
-================
-django-eve-proxy
-================
+==============
+django-eve-api
+==============
 
-django-eve-proxy is a Django app that allows you to host an EVE API proxy that
-is open to web requests or internal requests programatically. Honors EVE API 
-cache expiration intervals and updates as needed (which means you don't have 
-to worry about stuff like cachedUntil).
+django-eve-api is a set of `Django`_ models meant to make querying the EVE data 
+API trivial. All parsing of the data returned by the API is handled, as are 
+cache recycle times via django-eve-proxy.
 
-Source: https://github.com/duointeractive/django-eve-proxy
+**NOTE: django-eve-api is not stable enough for the development of third party 
+applications just yet (aside from django-eve-db). You are welcome 
+(and encouraged) to tinker, just be aware that things are still rapidly 
+changing and may break periodically.**
 
----------------------
-Example Python Access
----------------------
+Source: https://github.com/gtaylor/django-eve-api
 
-::
-
-    # Query with no parameters.
-    cached_doc = CachedDocument.objects.api_query('/eve/ErrorList.xml.aspx', params=None)
-    # Print the results from EVE API as a string.
-    print cached_doc.body
- 
-    # A query with parameters.
-    cached_doc = CachedDocument.objects.api_query('/account/Characters.xml.aspx', 
-      params={
-       'apiKey': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 
-       'userID': 'xxxxxxx'
-      })
-    
-    # Print the results from EVE API as a string.
-    print cached_doc.body
-
--------------------
-Example HTTP Access
--------------------
-
-Instead of pointing your script at http://api.eve-online.com, point it at 
-http://proxy.yoursite.com.
-
-----------------
-Database Support
-----------------
-
-django-eve-proxy runs on all of the databases supported by 
-Django (currently SQLite, Postgres, MySQL, Oracle, and a few others 
-unofficially), but does experience some difficulty when using databases in 
-encodings other than UTF-8 (which is what CCP sends their XML data back as). 
-Notably, SQLite will run into occasional encoding errors that must be handled 
-on your end.
-
-------------
-Installation
-------------
-To install, download the latest django-eve-proxy release from the _Downloads_ 
-section, run `setup.py install` as with any Python package, and add 
-`eve_proxy` to your setting.py `INSTALLED_APPS` tuple. For those what would 
-like to expose the HTTP proxy, you'll need to add an entry to your `urls.py` 
-that points to `eve_proxy.urls`. More detailed may be found in the INSTALL file.
+.. _Django: http://djangoproject.com
 
 ---------------
-Example Project
+Getting Started
 ---------------
 
-If you'd like to see an example Django project using django-eve-proxy, 
-download  eve_proxy_site.zip file via the **Downloads** button on our github
-page.
+For details on how to get started using this software, see the 
+`Getting Started`_ page. Note that since this app requires django-eve-db and 
+django-eve-proxy, it may be better to just install `django-eve`_, which wraps 
+all of these into a neat starter project framework.
+
+.. _Getting Started: https://github.com/gtaylor/django-eve-api/wiki/Getting-started
+.. _django-eve: http://code.google.com/p/django-eve/
 
 -----------
 Development
