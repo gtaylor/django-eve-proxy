@@ -94,7 +94,7 @@ class CachedDocumentManager(models.Manager):
         
         if no_cache:
             # If no_cache is enabled, don't even attempt a lookup.
-            cached_doc = CachedDocument()
+            cached_doc = CachedDocument(url_path=query_name)
             created = False
         else:
             # Retrieve or create a new CachedDocument based on the full URL
